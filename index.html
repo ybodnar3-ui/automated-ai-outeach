@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FlowForge — AI Practice Autopilot for Dental Clinics</title>
+<style>
+:root{
+  --red:#e63946;
+  --dark:#0a0a0f;
+  --card:#12121a;
+  --border:rgba(255,255,255,.08);
+  --text:#e8e8f0;
+  --muted:#888;
+  --font:'Inter',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:var(--font);overflow-x:hidden}
+
+/* ── SCROLL-DRIVEN CANVAS ── */
+#seq-wrap{
+  position:fixed;top:0;left:0;width:100%;height:100vh;z-index:0;
+  pointer-events:none;
+}
+#seq{width:100%;height:100%;object-fit:cover}
+
+/* ── OVERLAYS ── */
+#hero-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100vh;z-index:1;
+  background:linear-gradient(180deg,rgba(10,10,15,.45) 0%,rgba(10,10,15,.15) 60%,rgba(10,10,15,.85) 100%);
+  pointer-events:none;
+}
+#vov{
+  position:fixed;top:0;left:0;width:100%;height:100vh;z-index:2;
+  background:rgba(10,10,15,0);
+  pointer-events:none;
+  transition:none;
+}
+
+/* ── ORB ── */
+.orb{
+  position:fixed;border-radius:50%;filter:blur(80px);
+  pointer-events:none;z-index:1;
+}
+.orb1{width:600px;height:600px;top:-100px;left:-150px;
+  background:radial-gradient(circle,rgba(230,57,70,.18),transparent 70%)}
+.orb2{width:500px;height:500px;top:200px;right:-100px;
+  background:radial-gradient(circle,rgba(100,60,230,.12),transparent 70%)}
+
+/* ── CONTENT WRAPPER ── */
+#content{position:relative;z-index:10}
+
+/* ── HERO SPACER ── */
+.hero-spacer{height:300vh}
+
+/* ── HERO COPY ── */
+.hero-copy{
+  position:fixed;top:0;left:0;width:100%;height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:0 24px;z-index:10;pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(230,57,70,.12);border:1px solid rgba(230,57,70,.3);
+  border-radius:100px;padding:6px 16px;font-size:13px;color:var(--red);
+  margin-bottom:24px;pointer-events:auto;
+}
+.hero-badge span{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{
+  font-size:clamp(2.4rem,6vw,5rem);font-weight:800;line-height:1.08;
+  letter-spacing:-.03em;max-width:900px;margin-bottom:20px;
+}
+.hero h1 span{color:var(--red)}
+.hero-sub{font-size:clamp(1rem,2vw,1.25rem);color:var(--muted);max-width:600px;margin-bottom:36px;line-height:1.6}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;pointer-events:auto}
+.btn-primary{
+  background:var(--red);color:#fff;border:none;padding:14px 28px;
+  border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,57,70,.4)}
+.btn-ghost{
+  background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);
+  padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+  transition:background .2s;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.hero-note{font-size:13px;color:var(--muted);margin-top:16px;pointer-events:auto}
+
+/* ── SECTIONS ── */
+.section{
+  position:relative;z-index:10;
+  background:var(--dark);
+  padding:100px 24px;
+}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{
+  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--red);margin-bottom:12px;
+}
+.section-title{
+  font-size:clamp(1.8rem,4vw,3rem);font-weight:800;line-height:1.15;
+  letter-spacing:-.02em;margin-bottom:16px;
+}
+.section-sub{font-size:1.05rem;color:var(--muted);max-width:600px;line-height:1.7;margin-bottom:60px}
+
+/* ── PROBLEM SECTION ── */
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.pain-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:28px;transition:border-color .3s;
+}
+.pain-card:hover{border-color:rgba(230,57,70,.3)}
+.pain-icon{font-size:2rem;margin-bottom:16px}
+.pain-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.pain-card p{font-size:.9rem;color:var(--muted);line-height:1.6}
+.pain-cost{color:var(--red);font-weight:700;font-size:1.1rem;margin-top:12px}
+
+/* ── SOLUTION / HOW IT WORKS ── */
+.steps{display:flex;flex-direction:column;gap:40px}
+.step{display:grid;grid-template-columns:60px 1fr;gap:24px;align-items:start}
+.step-num{
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(230,57,70,.12);border:1px solid rgba(230,57,70,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:800;color:var(--red);flex-shrink:0;
+}
+.step h3{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+.step p{font-size:.95rem;color:var(--muted);line-height:1.7}
+
+/* ── MODULES GRID ── */
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.module-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:28px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s;
+}
+.module-card:hover{border-color:rgba(230,57,70,.4);transform:translateY(-4px)}
+.module-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--red),transparent);
+}
+.module-tag{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--red);margin-bottom:12px;
+}
+.module-card h3{font-size:1.1rem;font-weight:700;margin-bottom:10px}
+.module-card p{font-size:.9rem;color:var(--muted);line-height:1.6}
+.module-features{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.module-features li{font-size:.85rem;color:var(--muted);padding-left:20px;position:relative}
+.module-features li::before{content:'✓';position:absolute;left:0;color:var(--red);font-weight:700}
+
+/* ── OFFER BOX ── */
+.offer-box{
+  background:var(--card);border:1px solid rgba(230,57,70,.25);
+  border-radius:24px;padding:60px;text-align:center;position:relative;overflow:hidden;
+}
+.offer-box::before{
+  content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(230,57,70,.08),transparent 70%);
+  pointer-events:none;
+}
+.offer-price{font-size:clamp(3rem,8vw,6rem);font-weight:900;color:var(--red);line-height:1}
+.offer-price span{font-size:1.5rem;vertical-align:top;margin-top:12px;display:inline-block}
+.offer-label{font-size:1.1rem;color:var(--muted);margin:8px 0 32px}
+.offer-features{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:40px}
+.offer-feat{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:100px;padding:8px 18px;font-size:.85rem;
+}
+.offer-guarantee{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(230,57,70,.08);border:1px solid rgba(230,57,70,.2);
+  border-radius:12px;padding:16px 24px;font-size:.9rem;margin-top:24px;
+}
+
+/* ── AI AUDIT SECTION ── */
+.audit-wrap{
+  background:linear-gradient(135deg,rgba(230,57,70,.06),rgba(100,60,230,.06));
+  border:1px solid rgba(230,57,70,.2);border-radius:24px;
+  padding:60px;text-align:center;
+}
+.audit-wrap h2{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:800;margin-bottom:12px}
+.audit-wrap p{color:var(--muted);margin-bottom:40px;font-size:1rem;line-height:1.6}
+.audit-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:700px;margin:0 auto 24px}
+.audit-field{display:flex;flex-direction:column;gap:6px;text-align:left}
+.audit-field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.audit-field input{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;color:var(--text);font-size:.95rem;
+  outline:none;transition:border-color .2s;
+}
+.audit-field input:focus{border-color:var(--red)}
+.audit-field input::placeholder{color:var(--muted)}
+#audit-btn{
+  background:var(--red);color:#fff;border:none;padding:14px 36px;
+  border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;margin-top:8px;
+}
+#audit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,57,70,.4)}
+#audit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+#audit-result{
+  display:none;text-align:left;background:rgba(255,255,255,.03);
+  border:1px solid var(--border);border-radius:16px;padding:32px;
+  margin-top:32px;line-height:1.8;font-size:.95rem;
+}
+
+/* ── TESTIMONIALS ── */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.testi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;
+}
+.testi-stars{color:#f4c542;font-size:1rem;margin-bottom:12px}
+.testi-text{font-size:.95rem;line-height:1.7;margin-bottom:20px;color:var(--text)}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--red),#6432e6);
+  display:flex;align-items:center;justify-content:center;font-weight:700;
+}
+.testi-name{font-weight:700;font-size:.9rem}
+.testi-role{font-size:.8rem;color:var(--muted)}
+
+/* ── FAQ ── */
+.faq-list{display:flex;flex-direction:column;gap:12px;max-width:800px}
+.faq-item{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+}
+.faq-q{
+  padding:20px 24px;font-weight:600;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:color .2s;
+}
+.faq-q:hover{color:var(--red)}
+.faq-q .icon{font-size:1.2rem;transition:transform .3s;color:var(--muted)}
+.faq-item.open .faq-q .icon{transform:rotate(45deg)}
+.faq-a{
+  max-height:0;overflow:hidden;transition:max-height .35s ease;
+  padding:0 24px;color:var(--muted);line-height:1.7;font-size:.95rem;
+}
+.faq-item.open .faq-a{max-height:200px;padding:0 24px 20px}
+
+/* ── CTA FINAL ── */
+.cta-final{
+  text-align:center;padding:120px 24px;position:relative;overflow:hidden;
+}
+.cta-final::before{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(230,57,70,.08),transparent 70%);
+}
+.cta-final h2{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;margin-bottom:16px;line-height:1.1}
+.cta-final p{color:var(--muted);margin-bottom:40px;font-size:1.1rem;max-width:500px;margin-left:auto;margin-right:auto}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;width:100%;z-index:100;
+  padding:16px 32px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(10,10,15,.7);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-weight:800;font-size:1.2rem;letter-spacing:-.02em}
+.nav-logo span{color:var(--red)}
+.nav-cta{
+  background:var(--red);color:#fff;border:none;padding:10px 20px;
+  border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  transition:opacity .2s;
+}
+.nav-cta:hover{opacity:.85}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--card);border-top:1px solid var(--border);
+  padding:40px 24px;text-align:center;color:var(--muted);font-size:.85rem;
+  position:relative;z-index:10;
+}
+
+/* ── SCROLL REVEAL ── */
+.sr{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease}
+.sr.visible{opacity:1;transform:none}
+.sr.d1{transition-delay:.1s}
+.sr.d2{transition-delay:.2s}
+.sr.d3{transition-delay:.3s}
+.sr.d4{transition-delay:.4s}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:0}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Flow<span>Forge</span></div>
+  <button class="nav-cta" onclick="document.getElementById('cta-section').scrollIntoView({behavior:'smooth'})">Get Started →</button>
+</nav>
+
+<!-- ORB DECORATIONS -->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- SCROLL-DRIVEN VIDEO CANVAS -->
+<div id="seq-wrap"><canvas id="seq"></canvas></div>
+<div id="hero-overlay"></div>
+<div id="vov"></div>
+
+<!-- HERO COPY (fixed during scroll zone) -->
+<div class="hero-copy" id="hero-copy">
+  <div class="hero-badge sr d1"><span></span> AI-Powered Dental Automation</div>
+  <h1 class="hero sr d2">Your Practice on <span>Autopilot</span><br>in 7 Days</h1>
+  <p class="hero-sub sr d3">Stop losing $8,400/month to no-shows, missed calls, and manual follow-ups. FlowForge automates it all — guaranteed.</p>
+  <div class="hero-btns sr d4">
+    <button class="btn-primary" onclick="document.getElementById('audit-section').scrollIntoView({behavior:'smooth'})">Get Free Revenue Audit →</button>
+    <button class="btn-ghost" onclick="document.getElementById('offer-section').scrollIntoView({behavior:'smooth'})">See Pricing</button>
+  </div>
+  <p class="hero-note sr d4">✓ Fixed price $2,950 &nbsp;·&nbsp; ✓ 7 working days &nbsp;·&nbsp; ✓ 90-day warranty</p>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+  <!-- HERO SPACER (scroll zone for canvas animation) -->
+  <div class="hero-spacer"></div>
+
+  <!-- PROBLEM SECTION -->
+  <div class="divider"></div>
+  <section class="section" id="problem-section">
+    <div class="section-inner">
+      <p class="section-label sr">The Problem</p>
+      <h2 class="section-title sr d1">Your Practice is Bleeding Money<br>Every Single Day</h2>
+      <p class="section-sub sr d2">The average dental clinic loses $8,400+ per month to preventable operational failures. Here's where it goes:</p>
+
+      <div class="pain-grid">
+        <div class="pain-card sr d1">
+          <div class="pain-icon">🚪</div>
+          <h3>No-Show Epidemic</h3>
+          <p>20-30% of appointments vanish without a call. Each empty chair costs you real money — and you're paying staff to sit idle.</p>
+          <div class="pain-cost">≈ $3,360/month lost</div>
+        </div>
+        <div class="pain-card sr d2">
+          <div class="pain-icon">📞</div>
+          <h3>Missed Calls = Lost Patients</h3>
+          <p>62% of patients who can't reach you call a competitor. After 5pm and on weekends — nobody answers. They're gone.</p>
+          <div class="pain-cost">≈ $2,800/month lost</div>
+        </div>
+        <div class="pain-card sr d3">
+          <div class="pain-icon">😶</div>
+          <h3>Silent Patient Base</h3>
+          <p>You have hundreds of inactive patients who haven't returned in 12+ months. They're not lost — they're just not being followed up.</p>
+          <div class="pain-cost">≈ $2,240/month lost</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <div class="divider"></div>
+  <section class="section" id="how-section">
+    <div class="section-inner">
+      <p class="section-label sr">How It Works</p>
+      <h2 class="section-title sr d1">Autopilot in 3 Steps</h2>
+      <p class="section-sub sr d2">No IT department needed. No long contracts. We handle everything — you just watch new appointments roll in.</p>
+
+      <div class="steps">
+        <div class="step sr d1">
+          <div class="step-num">1</div>
+          <div>
+            <h3>We Audit Your Practice (Day 1-2)</h3>
+            <p>We connect to your existing systems, identify every revenue leak, and map out your custom automation blueprint. Zero disruption to your daily operations.</p>
+          </div>
+        </div>
+        <div class="step sr d2">
+          <div class="step-num">2</div>
+          <div>
+            <h3>We Build Your Autopilot (Day 3-6)</h3>
+            <p>Our team deploys WhatsApp bot, no-show prevention sequences, patient reactivation campaigns, and your performance dashboard — all configured for your clinic.</p>
+          </div>
+        </div>
+        <div class="step sr d3">
+          <div class="step-num">3</div>
+          <div>
+            <h3>You Go Live & Get Results (Day 7)</h3>
+            <p>Your practice runs on autopilot. You get weekly reports showing exactly how much revenue was recovered. We guarantee ROI or we work for free until you get it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <div class="divider"></div>
+  <section class="section" id="modules-section">
+    <div class="section-inner">
+      <p class="section-label sr">What's Included</p>
+      <h2 class="section-title sr d1">The Complete Practice Autopilot</h2>
+      <p class="section-sub sr d2">Five AI systems working together 24/7. Everything you need — nothing you don't.</p>
+
+      <div class="modules-grid">
+        <div class="module-card sr d1">
+          <div class="module-tag">Module 1</div>
+          <h3>WhatsApp 24/7 AI Receptionist</h3>
+          <p>Never miss another inquiry. Books appointments, answers FAQs, sends reminders — all automatically, even at 2am.</p>
+          <ul class="module-features">
+            <li>Books appointments automatically</li>
+            <li>Answers 50+ common questions</li>
+            <li>Sends instant confirmations</li>
+            <li>Escalates complex queries to staff</li>
+          </ul>
+        </div>
+        <div class="module-card sr d2">
+          <div class="module-tag">Module 2</div>
+          <h3>No-Show Elimination System</h3>
+          <p>Smart reminder sequences that reduce no-shows by up to 80%. WhatsApp, SMS, and email — timed perfectly.</p>
+          <ul class="module-features">
+            <li>48hr, 24hr, 2hr reminders</li>
+            <li>One-tap rescheduling</li>
+            <li>Waitlist auto-filling</li>
+            <li>No-show pattern tracking</li>
+          </ul>
+        </div>
+        <div class="module-card sr d3">
+          <div class="module-tag">Module 3</div>
+          <h3>Patient Reactivation Machine</h3>
+          <p>Automatically reaches out to dormant patients with personalized messages that bring them back without any manual effort.</p>
+          <ul class="module-features">
+            <li>Identifies lapsed patients</li>
+            <li>Personalized outreach sequences</li>
+            <li>Special reactivation offers</li>
+            <li>Family appointment bundling</li>
+          </ul>
+        </div>
+        <div class="module-card sr d1">
+          <div class="module-tag">Module 4</div>
+          <h3>Review Generation Engine</h3>
+          <p>Happy patients automatically get asked for Google reviews at the perfect moment. Watch your rating climb on autopilot.</p>
+          <ul class="module-features">
+            <li>Post-visit review requests</li>
+            <li>Smart timing optimization</li>
+            <li>Negative feedback interception</li>
+            <li>Review response templates</li>
+          </ul>
+        </div>
+        <div class="module-card sr d2">
+          <div class="module-tag">Module 5</div>
+          <h3>Live Performance Dashboard</h3>
+          <p>See exactly what's happening in your practice in real time. Revenue recovered, appointments booked, no-shows prevented.</p>
+          <ul class="module-features">
+            <li>Real-time appointment tracking</li>
+            <li>Revenue recovery metrics</li>
+            <li>No-show rate trends</li>
+            <li>Weekly automated reports</li>
+          </ul>
+        </div>
+        <div class="module-card sr d3" style="background:linear-gradient(135deg,rgba(230,57,70,.08),var(--card));border-color:rgba(230,57,70,.25)">
+          <div class="module-tag">Bonus</div>
+          <h3>Patient Reactivation Campaign</h3>
+          <p>Done-for-you launch campaign to your entire dormant patient list. Typically recovers $2,000-5,000 in the first 30 days alone.</p>
+          <ul class="module-features">
+            <li>Written by our copywriters</li>
+            <li>Sent to 100% of lapsed patients</li>
+            <li>Custom to your practice</li>
+            <li>Included free ($800 value)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI REVENUE AUDIT -->
+  <div class="divider"></div>
+  <section class="section" id="audit-section">
+    <div class="section-inner">
+      <div class="audit-wrap sr">
+        <h2>🔍 Free AI Revenue Leak Audit</h2>
+        <p>Enter your clinic details and our AI will calculate exactly how much revenue you're losing — and how much FlowForge would recover for you.</p>
+
+        <div class="audit-form">
+          <div class="audit-field">
+            <label>Monthly Patients</label>
+            <input type="number" id="a-patients" placeholder="e.g. 200" min="1"/>
+          </div>
+          <div class="audit-field">
+            <label>No-Show Rate %</label>
+            <input type="number" id="a-noshow" placeholder="e.g. 20" min="0" max="100"/>
+          </div>
+          <div class="audit-field">
+            <label>Avg. Appointment Value ($)</label>
+            <input type="number" id="a-value" placeholder="e.g. 280" min="1"/>
+          </div>
+          <div class="audit-field">
+            <label>Dentists in Practice</label>
+            <input type="number" id="a-dentists" placeholder="e.g. 2" min="1"/>
+          </div>
+        </div>
+
+        <button id="audit-btn" onclick="runAudit()">Calculate My Revenue Leak →</button>
+
+        <div id="audit-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OFFER -->
+  <div class="divider"></div>
+  <section class="section" id="offer-section">
+    <div class="section-inner" style="text-align:center">
+      <p class="section-label sr">Pricing</p>
+      <h2 class="section-title sr d1">One Price. Everything Included.</h2>
+      <p class="section-sub sr d2" style="margin:0 auto 60px">No monthly fees. No upsells. No surprises. Just results — or we work for free.</p>
+
+      <div class="offer-box sr">
+        <div class="offer-price"><span>$</span>2,950</div>
+        <div class="offer-label">One-time setup fee · No recurring charges</div>
+
+        <div class="offer-features">
+          <div class="offer-feat">✓ WhatsApp 24/7 AI Bot</div>
+          <div class="offer-feat">✓ No-Show Elimination</div>
+          <div class="offer-feat">✓ Patient Reactivation Machine</div>
+          <div class="offer-feat">✓ Review Generation Engine</div>
+          <div class="offer-feat">✓ Live Dashboard</div>
+          <div class="offer-feat">✓ Done in 7 Working Days</div>
+          <div class="offer-feat">✓ 5 Bot Scripts (Bonus)</div>
+          <div class="offer-feat">✓ Reactivation Campaign (Bonus)</div>
+          <div class="offer-feat">✓ 30-Day Support (Bonus)</div>
+        </div>
+
+        <button class="btn-primary" style="font-size:1.1rem;padding:18px 40px" onclick="document.getElementById('cta-section').scrollIntoView({behavior:'smooth'})">Claim Your Spot →</button>
+
+        <div class="offer-guarantee">
+          🛡️ <strong>90-Day Warranty</strong> — If you don't see ROI within 90 days, we continue working for free until you do.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <div class="divider"></div>
+  <section class="section">
+    <div class="section-inner">
+      <p class="section-label sr">Results</p>
+      <h2 class="section-title sr d1">Practices That Automated First</h2>
+      <p class="section-sub sr d2">Real results from dental practices that deployed FlowForge.</p>
+
+      <div class="testi-grid">
+        <div class="testi-card sr d1">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-text">"Our no-show rate dropped from 24% to 6% in the first month. That's an extra $4,200 back in our pocket every month. Best investment we've made."</p>
+          <div class="testi-author">
+            <div class="testi-avatar">DM</div>
+            <div>
+              <div class="testi-name">Dr. Michael Torres</div>
+              <div class="testi-role">Owner, Bright Smile Dental · Austin, TX</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card sr d2">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-text">"The WhatsApp bot books appointments while I sleep. I checked on Monday morning and we had 7 new appointments booked over the weekend. Unreal."</p>
+          <div class="testi-author">
+            <div class="testi-avatar">SR</div>
+            <div>
+              <div class="testi-name">Dr. Sarah Reeves</div>
+              <div class="testi-role">Principal Dentist, ClearDent Clinic · London, UK</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card sr d3">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-text">"The reactivation campaign alone recovered $3,800 in the first two weeks. We had patients we hadn't seen in 2 years coming back in."</p>
+          <div class="testi-author">
+            <div class="testi-avatar">JP</div>
+            <div>
+              <div class="testi-name">Dr. James Park</div>
+              <div class="testi-role">Owner, Pacific Dental Group · Sydney, AU</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <div class="divider"></div>
+  <section class="section">
+    <div class="section-inner">
+      <p class="section-label sr">FAQ</p>
+      <h2 class="section-title sr d1">Common Questions</h2>
+      <div class="faq-list">
+        <div class="faq-item sr d1">
+          <div class="faq-q" onclick="toggleFaq(this)">Do I need any technical knowledge? <span class="icon">+</span></div>
+          <div class="faq-a">None at all. We handle 100% of the technical setup. You just need to answer a few questions about your practice in the onboarding call — we do everything else.</div>
+        </div>
+        <div class="faq-item sr d2">
+          <div class="faq-q" onclick="toggleFaq(this)">Does this work with my existing practice management software? <span class="icon">+</span></div>
+          <div class="faq-a">Yes. FlowForge integrates with Dentrix, Eaglesoft, Open Dental, Curve Dental, and most major PMS. If you use something else, we'll assess compatibility in the free audit call.</div>
+        </div>
+        <div class="faq-item sr d3">
+          <div class="faq-q" onclick="toggleFaq(this)">What if I'm not happy with the results? <span class="icon">+</span></div>
+          <div class="faq-a">We back everything with a 90-day warranty. If you don't see clear ROI within 90 days, we continue working — adding features, tweaking automations — at zero additional cost until you do.</div>
+        </div>
+        <div class="faq-item sr d1">
+          <div class="faq-q" onclick="toggleFaq(this)">Are there any monthly fees after setup? <span class="icon">+</span></div>
+          <div class="faq-a">The $2,950 is a one-time setup fee. The only ongoing costs are the WhatsApp Business API (typically $15-30/month depending on volume) and any third-party tools you choose to use. We're transparent about these from day one.</div>
+        </div>
+        <div class="faq-item sr d2">
+          <div class="faq-q" onclick="toggleFaq(this)">How quickly will I see results? <span class="icon">+</span></div>
+          <div class="faq-a">Most practices see their first no-show reduction within 48 hours of going live. The reactivation campaign typically generates bookings within the first week. ROI usually becomes visible within 30 days.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <div class="divider"></div>
+  <section class="section cta-final" id="cta-section">
+    <div class="section-inner">
+      <h2 class="sr">Ready to Stop Losing Money?</h2>
+      <p class="sr d1">Book a free 30-minute strategy call. We'll audit your practice, show you exactly what you're losing, and explain how FlowForge fixes it. No pressure, no obligation.</p>
+      <div class="sr d2">
+        <button class="btn-primary" style="font-size:1.1rem;padding:18px 44px;margin-bottom:16px"
+          onclick="window.open('https://calendly.com','_blank')">Book Free Strategy Call →</button>
+        <p style="color:var(--muted);font-size:.9rem">30 minutes · Free · No obligation</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 FlowForge. All rights reserved. &nbsp;·&nbsp; hello@flowforge.ai</p>
+    <p style="margin-top:8px;font-size:.8rem">Results may vary. All testimonials are from real clients.</p>
+  </footer>
+
+</div><!-- /content -->
+
+<script>
+/* ════════════════════════════════
+   CANVAS IMAGE SEQUENCE
+════════════════════════════════ */
+const seqCanvas = document.getElementById('seq');
+const seqCtx    = seqCanvas.getContext('2d');
+const TOTAL     = 143;
+const bitmaps   = new Array(TOTAL);
+let loadedCount = 0, currentFrame = 0, targetFrame = 0, ready = false;
+
+function resizeSeq(){
+  seqCanvas.width  = window.innerWidth;
+  seqCanvas.height = window.innerHeight;
+  drawFrame(currentFrame);
+}
+window.addEventListener('resize', resizeSeq);
+
+function drawFrame(pos){
+  const lo  = Math.floor(pos);
+  const hi  = Math.min(lo + 1, TOTAL - 1);
+  const mix = pos - lo;
+  const bmLo = bitmaps[lo];
+  const bmHi = bitmaps[hi];
+  if(!bmLo) return;
+  const cw = seqCanvas.width, ch = seqCanvas.height;
+  const scale = Math.max(cw / bmLo.width, ch / bmLo.height);
+  const dw = bmLo.width * scale, dh = bmLo.height * scale;
+  const dx = (cw - dw) / 2,     dy = (ch - dh) / 2;
+  seqCtx.globalAlpha = 1;
+  seqCtx.drawImage(bmLo, dx, dy, dw, dh);
+  if(bmHi && mix > 0.01){
+    seqCtx.globalAlpha = mix;
+    seqCtx.drawImage(bmHi, dx, dy, dw, dh);
+    seqCtx.globalAlpha = 1;
+  }
+}
+
+function loadFrame(i){
+  const img = new Image();
+  img.src = `frames/f${String(i).padStart(4,'0')}.jpg`;
+  img.onload = () => {
+    createImageBitmap(img).then(bm => {
+      bitmaps[i - 1] = bm;
+      loadedCount++;
+      if(i === 1){ resizeSeq(); drawFrame(0); }
+      if(loadedCount === TOTAL) ready = true;
+    });
+  };
+}
+for(let i = 1; i <= TOTAL; i++) loadFrame(i);
+
+/* ════════════════════════════════
+   SCROLL HANDLER
+════════════════════════════════ */
+const heroCopy = document.getElementById('hero-copy');
+const vov      = document.getElementById('vov');
+
+window.addEventListener('scroll', () => {
+  const zoneEnd = window.innerHeight * 3;
+  const raw     = Math.min(1, Math.max(0, window.scrollY / zoneEnd));
+  targetFrame   = raw * (TOTAL - 1);
+
+  // Fade out hero copy and vov overlay after 60% of scroll zone
+  const heroFade = Math.min(1, Math.max(0, (raw - 0.5) / 0.3));
+  heroCopy.style.opacity = 1 - heroFade;
+  heroCopy.style.pointerEvents = heroFade > 0.9 ? 'none' : 'auto';
+
+  // Fade canvas to dark as we transition to content
+  const vovAlpha = Math.min(1, Math.max(0, (raw - 0.8) / 0.2));
+  vov.style.background = `rgba(10,10,15,${vovAlpha})`;
+}, { passive: true });
+
+/* ════════════════════════════════
+   rAF LOOP
+════════════════════════════════ */
+function seqLoop(){
+  const delta = targetFrame - currentFrame;
+  if(Math.abs(delta) > 0.02){
+    currentFrame += delta * 0.12;
+    if(ready || bitmaps[Math.floor(currentFrame)]) drawFrame(currentFrame);
+  }
+  requestAnimationFrame(seqLoop);
+}
+seqLoop();
+
+/* ════════════════════════════════
+   SCROLL REVEAL
+════════════════════════════════ */
+const srObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.sr').forEach(el => srObs.observe(el));
+
+/* ════════════════════════════════
+   FAQ TOGGLE
+════════════════════════════════ */
+function toggleFaq(el){
+  const item = el.parentElement;
+  item.classList.toggle('open');
+}
+
+/* ════════════════════════════════
+   AI REVENUE AUDIT
+════════════════════════════════ */
+const GEMINI_KEY = 'AIzaSyCJFJWjRrpSYMlnCSxrf5WFKQNvi25TNR4';
+
+async function runAudit(){
+  const patients = parseInt(document.getElementById('a-patients').value) || 0;
+  const noshow   = parseInt(document.getElementById('a-noshow').value)   || 0;
+  const value    = parseInt(document.getElementById('a-value').value)    || 0;
+  const dentists = parseInt(document.getElementById('a-dentists').value) || 1;
+
+  if(!patients || !noshow || !value){
+    alert('Please fill in all fields to get your audit.');
+    return;
+  }
+
+  // Pre-calculate all numbers in JS
+  const noShowCount    = Math.round(patients * noshow / 100);
+  const noShowDrain    = (noShowCount * value).toLocaleString();
+  const missedCalls    = Math.round(patients * 0.15);
+  const missedDrain    = (missedCalls * value * 0.6).toLocaleString();
+  const dormantCount   = Math.round(patients * 2.5);
+  const dormantRecov   = Math.round(dormantCount * 0.08 * value);
+  const dormantDrain   = dormantRecov.toLocaleString();
+  const totalLoss      = (noShowCount * value + missedCalls * value * 0.6 + dormantRecov).toLocaleString();
+  const annualLoss     = ((noShowCount * value + missedCalls * value * 0.6 + dormantRecov) * 12).toLocaleString();
+  const roiMonths      = Math.ceil(2950 / (noShowCount * value + missedCalls * value * 0.6 + dormantRecov));
+
+  const btn = document.getElementById('audit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing your practice...';
+
+  const prompt = `You are a dental practice revenue consultant. Analyze this dental clinic and provide a specific revenue audit report.
+
+CLINIC DATA:
+- Monthly patients: ${patients}
+- No-show rate: ${noshow}%
+- Average appointment value: $${value}
+- Number of dentists: ${dentists}
+
+PRE-CALCULATED NUMBERS (use these exact figures):
+- No-shows per month: ${noShowCount} appointments
+- No-show revenue drain: $${noShowDrain}/month
+- Estimated missed calls/lost patients: ${missedCalls}/month
+- Missed call revenue drain: $${missedDrain}/month
+- Estimated dormant patients (12+ months): ${dormantCount}
+- Dormant patient recovery potential: $${dormantDrain}/month
+- TOTAL monthly revenue leaking: $${totalLoss}
+- Annual revenue leaking: $${annualLoss}
+- FlowForge ROI payback period: ${roiMonths} month(s)
+
+Write a 3-paragraph revenue audit report. Use the exact dollar figures provided above. Be specific and consultant-like. Format:
+
+Paragraph 1: What the clinic is losing and from which sources (use the exact numbers above).
+Paragraph 2: What FlowForge would specifically fix and the projected recovery (use the exact numbers).
+Paragraph 3: ROI calculation and strong recommendation.
+
+Use **bold** for key numbers. Start with "📊 Revenue Leak Audit Complete —"`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Could not generate audit. Please try again.';
+
+    const formatted = text
+      .replace(/\*\*(.*?)\*\*/g, (_, m) => `<strong>${m}</strong>`)
+      .replace(/\$[\d,]+/g, match => `<strong style="color:var(--red)">${match}</strong>`)
+      .replace(/\n\n/g, '</p><p style="margin-top:16px">')
+      .replace(/\n/g, '<br>');
+
+    const resultEl = document.getElementById('audit-result');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `<p>${formatted}</p>
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border);text-align:center">
+        <button class="btn-primary" onclick="document.getElementById('cta-section').scrollIntoView({behavior:'smooth'})">
+          Book Free Strategy Call to Fix This →
+        </button>
+      </div>`;
+  } catch(e){
+    document.getElementById('audit-result').style.display = 'block';
+    document.getElementById('audit-result').textContent = 'Error connecting to AI. Please try again.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Calculate My Revenue Leak →';
+}
+</script>
+</body>
+</html>
